@@ -1,0 +1,23 @@
+#!/bin/sh
+realpath() { # adapted from https://stackoverflow.com/a/18443300
+  ourpwd=$PWD
+  cd "$(dirname "$1")"
+  LINK=$(readlink "$(basename "$1")")
+  while [ "$LINK" ]; do
+    cd "$(dirname "$LINK")"
+    new_base=$(basename "$LINK")
+    LINK=$(readlink "$new_base")
+  done
+  REALPATH="$PWD/${new_base}"
+  cd "$ourpwd"
+  echo "$REALPATH"
+}
+
+LILYPOND_PATH=$(realpath $0)
+
+GUILE_WARN_DEPRECATED="no"
+LTDL_LIBRARY_PATH="${LILYPOND_PATH}/../lib:${LTDL_LIBRARY_PATH}"
+export GUILE_WARN_DEPRECATED LTDL_LIBRARY_PATH
+
+exec ${LILYPOND_PATH}/../libexec/lilypond-bin "$@"
+
