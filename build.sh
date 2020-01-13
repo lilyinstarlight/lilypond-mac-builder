@@ -33,7 +33,7 @@ source "${LILYPAD_VENV}/bin/activate"
 warn 'Generating .app bundle...'
 MACOSX_DEPLOYMENT_TARGET=10.5 python ./setup.py --verbose py2app --icon=lilypond.icns
 
-warn 'Copying LilyPond binaries into bundle...'
+warn 'Copying LilyPond files into bundle...'
 MACPORTS_ROOT=~/lilypond-bundle
 APP_BUNDLE=${LILYPAD_PATH}/macosx/dist/LilyPond.app
 RESOURCES=${APP_BUNDLE}/Contents/Resources
@@ -58,6 +58,7 @@ for dir in etc license; do cp -av ${OLD_RESOURCES}/${dir} ${RESOURCES}/${dir}; d
 # extra config for Ghostscript
 cp -av ${EXTRA_FILES}/gs.reloc "${RESOURCES}/etc/relocate"
 
+warn 'Bundling dylibs...'
 mkdir ${RESOURCES}/lib
 cp -av ${MACPORTS_ROOT}/lib/guile18 ${RESOURCES}/lib
 cp -av ${MACPORTS_ROOT}/lib/libguile* ${RESOURCES}/lib
@@ -72,6 +73,7 @@ for dir in lib bin libexec; do
   done
 done
 
+warn 'Finding any dylibs we missed...'
 # for some reason some of these need an extra pass; maybe a bug in dylibbundler?
 for l in $(find ${RESOURCES}/lib); do
   if [ -n "$(otool -L "$l" | grep "${MACPORTS_ROOT}")" ]; then
