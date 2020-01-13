@@ -112,59 +112,14 @@ Empty except for cache directories. We may need to create it, but probably not e
 
 Mostly dylibs, which can be populated by using https://github.com/auriamg/macdylibbundler to move all the executables' dependencies in here. I'm installing 0.4.4 through MacPorts.
 
-But also, there seem to be some necessary Guile libraries that don't get copied that way (perhaps because Scheme is interpreted, not compiled and linked), so we have to move those in manually. Except that we can't seem to get those to get picked up, except possibly by setting environment variables, and that is suboptimal since we want to be able to call the LilyPond binary without going through the GUI app if necessary...but it turns out that LilyPond sets `INSTALLER_PREFIX` to its own directory, so that works. The remaining problem with finding them: according to https://lists.gnu.org/archive/html/bug-guile/2010-02/msg00000.html, it seems like they might need an .so extension. 
+But also, there seem to be some necessary Guile libraries that don't get copied that way (perhaps because Scheme is interpreted, not compiled and linked), so we have to move those in manually. Except that we can't seem to get those to get picked up, except possibly by setting environment variables, and that is suboptimal since we want to be able to call the LilyPond binary without going through the GUI app if necessary...but it turns out that LilyPond sets `INSTALLER_PREFIX` to its own directory, so that works. The remaining problem with finding them: according to https://lists.gnu.org/archive/html/bug-guile/2010-02/msg00000.html, it seems like they might need an .so extension.
 
 It seems that @executable_path refers to the path of whichever executable is linking to the library, not necessarily the .app bundle's main file.
 
 ### Script to populate files
 
-```shell
-# from macosx directory
-export MACPORTS_ROOT=~/lilypond-bundle
-export APP_BUNDLE=dist/LilyPond.app
-export RESOURCES=${APP_BUNDLE}/Contents/Resources
+The build.sh script now contains a script incorporating these research notes (including the extra configuration for Ghostscript below).
 
-for dir in bin share; do
-  mkdir ${RESOURCES}/${dir}
-  xargs -I% <extra-files/${dir} cp -av ${MACPORTS_ROOT}/${dir}/% ${RESOURCES}/${dir}/%
-done
-
-cp -av extra-files/lilypond ${RESOURCES}/bin
-mv -v ${RESOURCES}/bin/gsc ${RESOURCES}/bin/gs
-
-mkdir ${RESOURCES}/libexec
-cp -av ${MACPORTS_ROOT}/libexec/lilypond-bin ${RESOURCES}/libexec
-for file in ${RESOURCES}/bin/guile18*; do mv -v $file ${file/guile18/guile}; done
-# TODO: not sure what to do about gapplication
-
-export OLD_BUNDLE=~/32-bit-app/LilyPond.app
-export OLD_RESOURCES=${OLD_BUNDLE}/Contents/Resources
-for dir in etc license; do cp -av ${OLD_RESOURCES}/${dir} ${RESOURCES}/${dir}; done
-
-# extra config for Ghostscript; see below
-cp -av extra-files/gs.reloc "${RESOURCES}/etc/relocate"
-
-mkdir ${RESOURCES}/lib
-cp -av ${MACPORTS_ROOT}/lib/guile18 ${RESOURCES}/lib
-cp -av ${MACPORTS_ROOT}/lib/libguile* ${RESOURCES}/lib
-
-for dir in $(find "${MACPORTS_ROOT}/lib" -type d -maxdepth 1); do
-  export DYLD_LIBRARY_PATH="${dir}:${DYLD_LIBRARY_PATH}"
-done
-
-for dir in lib bin libexec; do
-  for l in $(find ${RESOURCES}/${dir}); do
-    dylibbundler -cd -of -b -x $l -d ${RESOURCES}/lib/ -p @executable_path/../lib/
-  done
-done
-
-# for some reason some of these need an extra pass; maybe a bug in dylibbundler?
-for l in $(find ${RESOURCES}/lib); do
-  if [ -n "$(otool -L "$l" | grep "${MACPORTS_ROOT}")" ]; then
-     dylibbundler -cd -of -b -x $l -d ${RESOURCES}/lib/ -p @executable_path/../lib/
-  fi
-done
-```
 ## Ghostscript configuration
 
 The above instructions produce a working app bundle, but LilyPond still won't run properly (at least for PDF output) because Ghostscript isn't properly configured:
