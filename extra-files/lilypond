@@ -13,11 +13,11 @@ realpath() { # adapted from https://stackoverflow.com/a/18443300
   echo "$REALPATH"
 }
 
-LILYPOND_PATH=$(realpath $0)
+LILYPOND_PATH=$(realpath "$0")
 
 GUILE_WARN_DEPRECATED="no"
 LTDL_LIBRARY_PATH="${LILYPOND_PATH}/../lib:${LTDL_LIBRARY_PATH}"
 export GUILE_WARN_DEPRECATED LTDL_LIBRARY_PATH
 
-exec ${LILYPOND_PATH}/../libexec/lilypond-bin "$@"
+exec "${LILYPOND_PATH}/../libexec/lilypond-bin" "$@"
 
