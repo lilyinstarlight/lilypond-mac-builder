@@ -1,10 +1,7 @@
 bash-completion
-emacs
 fontconfig
 gdb
 ghostscript
 glib-2.0
 guile
-lilypond
-locale
 xml
