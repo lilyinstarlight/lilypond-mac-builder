@@ -16,16 +16,22 @@ OLD_RESOURCES=${OLD_BUNDLE}/Contents/Resources
 PATH := ${MACPORTS_ROOT}/bin:${MACPORTS_ROOT}/sbin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin
 SHELL := env PATH="${PATH}" "${SHELL}"
 
+COPY := cp -av
+MKDIR_P := mkdir -p
+MOVE := mv -v
+PORT := "${MACPORTS_ROOT}/bin/port"
+RM_RF := rm -rf
+
 LILYPOND_VERSION=2.19.83# TODO: we should be able to get this from the source
 TIMESTAMP=$(shell date -j "+%Y%m%d%H%M%S")
 
 default: lilypond-all
 
 clean:
-	rm -rf ${BUILDDIR} ${SOURCEDIR}
+	${RM_RF} ${BUILDDIR} ${SOURCEDIR}
 
 buildclean:
-	rm -rf ${BUILDDIR}
+	${RM_RF} ${BUILDDIR}
 
 tar: | ${DISTDIR}
 	cd "${BUILDDIR}" &&\
@@ -54,42 +60,42 @@ copy-binaries: ${RESOURCES}/bin ${RESOURCES}/libexec/lilypond-bin ${RESOURCES}/s
 copy-support-files: ${RESOURCES}/etc ${RESOURCES}/license
 
 ${RESOURCES}/libexec/lilypond-bin: ${APP_BUNDLE} ${RESOURCES}/bin
-	mkdir -p "${RESOURCES}/libexec" &&\
-	mv -v "${RESOURCES}/bin/lilypond" "$@" &&\
-	cp -av "${EXTRA_FILES}/lilypond" "${RESOURCES}/bin"
+	${MKDIR_P} "${RESOURCES}/libexec" &&\
+	${MOVE} "${RESOURCES}/bin/lilypond" "$@" &&\
+	${COPY} "${EXTRA_FILES}/lilypond" "${RESOURCES}/bin"
 
 ${RESOURCES}/bin: ${APP_BUNDLE} ${BUILDDIR}/bin/lilypond
-	cp -av "${BUILDDIR}/bin" "$@" &&\
+	${COPY} "${BUILDDIR}/bin" "$@" &&\
 	: 'for file in $$(cat "${EXTRA_FILES}/bin"); do \' &&\
 	for file in gsc; do \
-	  cp -av "${MACPORTS_ROOT}/bin/$${file}" "${RESOURCES}/bin/$${file}";\
+	  ${COPY} "${MACPORTS_ROOT}/bin/$${file}" "${RESOURCES}/bin/$${file}";\
 	done &&\
-	: 'cp -av "${EXTRA_FILES}/lilypond" "${RESOURCES}/bin"' &&\
-	mv -v "${RESOURCES}/bin/gsc" "${RESOURCES}/bin/gs" &&\
-	: 'for file in ${RESOURCES}/bin/guile18*; do mv -v "$$file" "$${file/guile18/guile}"; done'
+	: '${COPY} "${EXTRA_FILES}/lilypond" "${RESOURCES}/bin"' &&\
+	${MOVE} "${RESOURCES}/bin/gsc" "${RESOURCES}/bin/gs" &&\
+	: 'for file in ${RESOURCES}/bin/guile18*; do ${MOVE} "$$file" "$${file/guile18/guile}"; done'
 	# TODO: get rid of : 'comment' lines!
 
 ${RESOURCES}/share: ${APP_BUNDLE} ${BUILDDIR}/share/lilypond
-	cp -av "${BUILDDIR}/share" "$@" &&\
+	${COPY} "${BUILDDIR}/share" "$@" &&\
 	xargs -I% <"${EXTRA_FILES}/share" cp -anv "${MACPORTS_ROOT}/share/%" "${RESOURCES}/share/%"
 
 ${RESOURCES}/etc: ${APP_BUNDLE}
-	mkdir -p "${RESOURCES}/etc" &&\
-	cp -av "${OLD_RESOURCES}/etc/" "${RESOURCES}/etc" &&\
-	cp -av "${EXTRA_FILES}/gs.reloc" "${RESOURCES}/etc/relocate"
+	${MKDIR_P} "${RESOURCES}/etc" &&\
+	${COPY} "${OLD_RESOURCES}/etc/" "${RESOURCES}/etc" &&\
+	${COPY} "${EXTRA_FILES}/gs.reloc" "${RESOURCES}/etc/relocate"
 
 ${RESOURCES}/license: ${APP_BUNDLE}
-	mkdir -p "${RESOURCES}/license" &&\
-	cp -av "${OLD_RESOURCES}/license/" "${RESOURCES}/license"
+	${MKDIR_P} "${RESOURCES}/license" &&\
+	${COPY} "${OLD_RESOURCES}/license/" "${RESOURCES}/license"
 
 copy-guile-libraries: ${APP_BUNDLE} ${BUILDDIR}/bin/lilypond
-	mkdir -p "${RESOURCES}/lib" &&\
-	cp -av "${MACPORTS_ROOT}/lib/guile18" "${RESOURCES}/lib" &&\
-	cp -av "${MACPORTS_ROOT}/lib/libguile"* "${RESOURCES}/lib"
+	${MKDIR_P} "${RESOURCES}/lib" &&\
+	${COPY} "${MACPORTS_ROOT}/lib/guile18" "${RESOURCES}/lib" &&\
+	${COPY} "${MACPORTS_ROOT}/lib/libguile"* "${RESOURCES}/lib"
 
 ${BUILDDIR}/bin/lilypond: ${SOURCEDIR}/lilypond/configure ${SOURCEDIR}/lilypond/build ${MACPORTS_ROOT}/include/libguile.h | ${BUILDDIR} ${SOURCEDIR}/lilypond/build
 	cd "${SOURCEDIR}/lilypond/build" &&\
-	port select --set gcc mp-gcc9 &&\
+	${PORT} select --set gcc mp-gcc9 &&\
 	export CC="${MACPORTS_ROOT}/bin/gcc" &&\
 	export CXX="${MACPORTS_ROOT}/bin/g++" &&\
 	export LTDL_LIBRARY_PATH="${MACPORTS_ROOT}/lib" &&\
@@ -113,23 +119,23 @@ ${SOURCEDIR}/lilypad/macosx/${VENV}: ${SOURCEDIR}/lilypad select-python
 ${SOURCEDIR}/lilypad: | ${SOURCEDIR}
 	cd "${SOURCEDIR}" &&\
 	curl -L "${LILYPAD_ARCHIVE}" | tar xvz &&\
-	rm -rf lilypad &&\
+	${RM_RF} lilypad &&\
 	mv "lilypad-${LILYPAD_BRANCH}" lilypad
 
 select-python: ${MACPORTS_ROOT}/bin/python2.7 ${MACPORTS_ROOT}/bin/virtualenv-2.7
-	port select --set python python27 && port select --set virtualenv virtualenv27
+	${PORT} select --set python python27 && ${PORT} select --set virtualenv virtualenv27
 
 ${MACPORTS_ROOT}/bin/python2.7:
-	port install python27
+	${PORT} install python27
 
 ${MACPORTS_ROOT}/bin/virtualenv-2.7:
-	port install py27-virtualenv
+	${PORT} install py27-virtualenv
 
 ${MACPORTS_ROOT}/include/libguile.h: ${MACPORTS_ROOT}/include/libguile18.h
 	ln -s "$<" "$@"
 
 ${MACPORTS_ROOT}/include/libguile18.h:
-	port install guile18
+	${PORT} install guile18
 
 ${SOURCEDIR}/lilypond/configure: | ${SOURCEDIR}/lilypond
 	cd "$|" && ./autogen.sh --noconfigure
@@ -142,6 +148,6 @@ ${SOURCEDIR}/lilypond: | ${SOURCEDIR}
 	cd lilypond && git checkout "${LILYPOND_BRANCH}" && git pull
 
 ${BUILDDIR} ${SOURCEDIR} ${SOURCEDIR}/lilypond/build ${DISTDIR}:
-	mkdir -p "$@"
+	${MKDIR_P} "$@"
 
 .PHONY: default clean buildclean lilypond-all copy-binaries copy-guile-libraries copy-support-files bundle-dylibs lilypad-venv select-python tar
