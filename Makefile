@@ -27,11 +27,11 @@ TIMESTAMP=$(shell date -j "+%Y%m%d%H%M%S")
 
 default: lilypond-all
 
-clean:
-	${RM_RF} ${BUILDDIR} ${SOURCEDIR}
+clean: buildclean
+	${RM_RF} "${SOURCEDIR}"
 
 buildclean:
-	${RM_RF} ${BUILDDIR}
+	${RM_RF} "${BUILDDIR}"
 
 tar: | ${DISTDIR}
 	cd "${BUILDDIR}" &&\
