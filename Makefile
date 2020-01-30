@@ -24,6 +24,9 @@ default: lilypond-all
 clean:
 	rm -rf ${BUILDDIR} ${SOURCEDIR}
 
+buildclean:
+	rm -rf ${BUILDDIR}
+
 tar: | ${DISTDIR}
 	cd "${BUILDDIR}" &&\
 	tar cvzf "${DISTDIR}/lilypond-${LILYPOND_VERSION}.build${TIMESTAMP}-darwin-64.tar.gz" LilyPond.app
@@ -132,4 +135,4 @@ ${SOURCEDIR}/lilypond: | ${SOURCEDIR}
 ${BUILDDIR} ${SOURCEDIR} ${SOURCEDIR}/lilypond/build ${DISTDIR}:
 	mkdir -p "$@"
 
-.PHONY: default clean lilypond-all copy-binaries copy-guile-libraries copy-support-files bundle-dylibs lilypad-venv tar
+.PHONY: default clean buildclean lilypond-all copy-binaries copy-guile-libraries copy-support-files bundle-dylibs lilypad-venv tar
