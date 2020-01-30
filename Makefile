@@ -13,8 +13,6 @@ RESOURCES=${APP_BUNDLE}/Contents/Resources
 OLD_BUNDLE=${HOME}/32-bit-app/LilyPond.app
 OLD_RESOURCES=${OLD_BUNDLE}/Contents/Resources
 
-SELECT_PYTHON=port select --set python python27 && port select --set virtualenv virtualenv27
-
 PATH := ${MACPORTS_ROOT}/bin:${MACPORTS_ROOT}/sbin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin
 SHELL := env PATH="${PATH}" "${SHELL}"
 
@@ -104,20 +102,28 @@ ${BUILDDIR}/bin/lilypond: ${SOURCEDIR}/lilypond/configure ${SOURCEDIR}/lilypond/
 
 ${APP_BUNDLE}: | lilypad-venv
 	cd "${SOURCEDIR}/lilypad/macosx" &&\
-	${SELECT_PYTHON} &&\
 	source "${VENV}/bin/activate" &&\
 	MACOSX_DEPLOYMENT_TARGET=10.5 python ./setup.py --verbose py2app --icon=lilypond.icns --dist-dir "${BUILDDIR}"
 
 lilypad-venv: ${SOURCEDIR}/lilypad/macosx/${VENV}
 
-${SOURCEDIR}/lilypad/macosx/${VENV}: ${SOURCEDIR}/lilypad
-	${SELECT_PYTHON} && cd "${SOURCEDIR}/lilypad/macosx" && virtualenv "${VENV}"
+${SOURCEDIR}/lilypad/macosx/${VENV}: ${SOURCEDIR}/lilypad select-python
+	cd "${SOURCEDIR}/lilypad/macosx" && virtualenv "${VENV}"
 
 ${SOURCEDIR}/lilypad: | ${SOURCEDIR}
 	cd "${SOURCEDIR}" &&\
 	curl -L "${LILYPAD_ARCHIVE}" | tar xvz &&\
 	rm -rf lilypad &&\
 	mv "lilypad-${LILYPAD_BRANCH}" lilypad
+
+select-python: ${MACPORTS_ROOT}/bin/python2.7 ${MACPORTS_ROOT}/bin/virtualenv-2.7
+	port select --set python python27 && port select --set virtualenv virtualenv27
+
+${MACPORTS_ROOT}/bin/python2.7:
+	port install python27
+
+${MACPORTS_ROOT}/bin/virtualenv-2.7:
+	port install py27-virtualenv
 
 ${MACPORTS_ROOT}/include/libguile.h: ${MACPORTS_ROOT}/include/libguile18.h
 	ln -s "$<" "$@"
@@ -138,4 +144,4 @@ ${SOURCEDIR}/lilypond: | ${SOURCEDIR}
 ${BUILDDIR} ${SOURCEDIR} ${SOURCEDIR}/lilypond/build ${DISTDIR}:
 	mkdir -p "$@"
 
-.PHONY: default clean buildclean lilypond-all copy-binaries copy-guile-libraries copy-support-files bundle-dylibs lilypad-venv tar
+.PHONY: default clean buildclean lilypond-all copy-binaries copy-guile-libraries copy-support-files bundle-dylibs lilypad-venv select-python tar
