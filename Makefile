@@ -13,7 +13,7 @@ RESOURCES=${APP_BUNDLE}/Contents/Resources
 OLD_BUNDLE=${HOME}/32-bit-app/LilyPond.app
 OLD_RESOURCES=${OLD_BUNDLE}/Contents/Resources
 
-PATH := ${MACPORTS_ROOT}/bin:${MACPORTS_ROOT}/sbin:${PATH}
+PATH := ${MACPORTS_ROOT}/bin:${MACPORTS_ROOT}/sbin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin
 SHELL := env PATH="${PATH}" "${SHELL}"
 
 LILYPOND_VERSION=2.19.83# TODO: we should be able to get this from the source
@@ -42,7 +42,7 @@ bundle-dylibs: copy-binaries copy-guile-libraries
 	: "for some reason some of these need an extra pass; maybe a bug in dylibbundler?" &&\
 	for l in $$(find "${RESOURCES}/lib"); do \
 	  if [ -n "$$(otool -L "$$l" | grep "${MACPORTS_ROOT}")" ]; then \
-	    dylibbundler -cd -of -b -x "$$l" -d "${RESOURCES}/lib/" -p "@executable_path/.. 	/lib/";\
+	    dylibbundler -cd -of -b -x "$$l" -d "${RESOURCES}/lib/" -p "@executable_path/../lib/";\
 	  fi;\
 	done
 
