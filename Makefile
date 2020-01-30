@@ -82,7 +82,7 @@ ${RESOURCES}/license: ${APP_BUNDLE}
 copy-guile-libraries: ${APP_BUNDLE} ${BUILDDIR}/bin/lilypond
 	mkdir -p "${RESOURCES}/lib" &&\
 	cp -av "${MACPORTS_ROOT}/lib/guile18" "${RESOURCES}/lib" &&\
-	cp -av ${MACPORTS_ROOT}/lib/libguile* "${RESOURCES}/lib"
+	cp -av "${MACPORTS_ROOT}/lib/libguile"* "${RESOURCES}/lib"
 
 ${BUILDDIR}/bin/lilypond: ${SOURCEDIR}/lilypond/configure ${SOURCEDIR}/lilypond/build ${MACPORTS_ROOT}/include/libguile.h | ${BUILDDIR} ${SOURCEDIR}/lilypond/build
 	cd "${SOURCEDIR}/lilypond/build" &&\
