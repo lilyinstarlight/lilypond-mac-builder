@@ -56,14 +56,15 @@ ${RESOURCES}/libexec/lilypond-bin: ${APP_BUNDLE} ${RESOURCES}/bin
 	cp -av "${EXTRA_FILES}/lilypond" "${RESOURCES}/bin"
 
 ${RESOURCES}/bin: ${APP_BUNDLE} ${BUILDDIR}/bin/lilypond
-	cp -av "${BUILDDIR}/bin" "$@"
-	# mkdir -p "${RESOURCES}/bin" &&\
-	# for file in $$(cat "${EXTRA_FILES}/bin"); do \
-	#   cp -av "${BUILDDIR}/bin/$${file}" "${RESOURCES}/bin/$${file}";\
-	# done &&\
-	# cp -av "${EXTRA_FILES}/lilypond" "${RESOURCES}/bin" &&\
-	# mv -v "${RESOURCES}/bin/gsc" "${RESOURCES}/bin/gs" &&\
-	# for file in ${RESOURCES}/bin/guile18*; do mv -v "$$file" "$${file/guile18/guile}"; done
+	cp -av "${BUILDDIR}/bin" "$@" &&\
+	: 'for file in $$(cat "${EXTRA_FILES}/bin"); do \' &&\
+	for file in gsc; do \
+	  cp -av "${MACPORTS_ROOT}/bin/$${file}" "${RESOURCES}/bin/$${file}";\
+	done &&\
+	: 'cp -av "${EXTRA_FILES}/lilypond" "${RESOURCES}/bin"' &&\
+	mv -v "${RESOURCES}/bin/gsc" "${RESOURCES}/bin/gs" &&\
+	: 'for file in ${RESOURCES}/bin/guile18*; do mv -v "$$file" "$${file/guile18/guile}"; done'
+	# TODO: get rid of : 'comment' lines!
 
 ${RESOURCES}/share: ${APP_BUNDLE} ${BUILDDIR}/share/lilypond
 	cp -av "${BUILDDIR}/share" "$@" &&\
