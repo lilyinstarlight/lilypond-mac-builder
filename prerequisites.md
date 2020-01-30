@@ -29,4 +29,5 @@ and for optional dependencies:
 
 * gcc9 (requires `port -f deactivate libunwind-headers` to build; `port select --set gcc mp-gcc9; CC="${MACPORTS_ROOT}/bin/gcc"; CXX="${MACPORTS_ROOT}/bin/g++"` to use)
 * python27 (`port select --set python python27`)
+* py27-virtualenv (`port select --set virtualenv virtualenv27`)
 * dylibbundler
