@@ -13,6 +13,8 @@ RESOURCES=${APP_BUNDLE}/Contents/Resources
 OLD_BUNDLE=${HOME}/32-bit-app/LilyPond.app
 OLD_RESOURCES=${OLD_BUNDLE}/Contents/Resources
 
+SELECT_PYTHON=port select --set python python27 && port select --set virtualenv virtualenv27
+
 PATH := ${MACPORTS_ROOT}/bin:${MACPORTS_ROOT}/sbin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin
 SHELL := env PATH="${PATH}" "${SHELL}"
 
@@ -102,13 +104,14 @@ ${BUILDDIR}/bin/lilypond: ${SOURCEDIR}/lilypond/configure ${SOURCEDIR}/lilypond/
 
 ${APP_BUNDLE}: | lilypad-venv
 	cd "${SOURCEDIR}/lilypad/macosx" &&\
+	${SELECT_PYTHON} &&\
 	source "${VENV}/bin/activate" &&\
 	MACOSX_DEPLOYMENT_TARGET=10.5 python ./setup.py --verbose py2app --icon=lilypond.icns --dist-dir "${BUILDDIR}"
 
 lilypad-venv: ${SOURCEDIR}/lilypad/macosx/${VENV}
 
 ${SOURCEDIR}/lilypad/macosx/${VENV}: ${SOURCEDIR}/lilypad
-	cd "${SOURCEDIR}/lilypad/macosx" && virtualenv "${VENV}"
+	${SELECT_PYTHON} && cd "${SOURCEDIR}/lilypad/macosx" && virtualenv "${VENV}"
 
 ${SOURCEDIR}/lilypad: | ${SOURCEDIR}
 	cd "${SOURCEDIR}" &&\
