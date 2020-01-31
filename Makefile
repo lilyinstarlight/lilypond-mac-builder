@@ -79,7 +79,8 @@ ${RESOURCES}/bin: ${APP_BUNDLE} ${BUILDDIR}/bin/lilypond
 
 ${RESOURCES}/share: ${APP_BUNDLE} ${BUILDDIR}/share/lilypond
 	${COPY} "${BUILDDIR}/share" "$@" &&\
-	xargs -I% <"${EXTRA_FILES}/share" cp -anv "${MACPORTS_ROOT}/share/%" "${RESOURCES}/share/%"
+	xargs -I% <"${EXTRA_FILES}/share" cp -anv "${MACPORTS_ROOT}/share/%" "${RESOURCES}/share/%" &&\
+	cd "$@/lilypond" && ln -s "${LILYPOND_VERSION}" current
 
 ${RESOURCES}/etc: ${APP_BUNDLE}
 	${MKDIR_P} "${RESOURCES}/etc" &&\
