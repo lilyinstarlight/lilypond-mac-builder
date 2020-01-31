@@ -21,6 +21,7 @@ MKDIR_P := mkdir -p
 MOVE := mv -v
 PORT := "${MACPORTS_ROOT}/bin/port"
 RM_RF := rm -rf
+ENV_PYTHON := /usr/bin/env python
 bundle-dylib="${MACPORTS_ROOT}/bin/dylibbundler" -cd -of -b -x "$(1)" -d "${RESOURCES}/lib/" -p "@executable_path/../lib/"
 
 LILYPOND_VERSION=2.19.83# TODO: we should be able to get this from the source
@@ -94,7 +95,7 @@ copy-guile-libraries: ${APP_BUNDLE} ${BUILDDIR}/bin/lilypond
 	${COPY} "${MACPORTS_ROOT}/lib/guile18" "${RESOURCES}/lib" &&\
 	${COPY} "${MACPORTS_ROOT}/lib/libguile"* "${RESOURCES}/lib"
 
-${BUILDDIR}/bin/lilypond: ${SOURCEDIR}/lilypond/configure ${SOURCEDIR}/lilypond/build ${MACPORTS_ROOT}/include/libguile.h | ${BUILDDIR} ${SOURCEDIR}/lilypond/build
+${BUILDDIR}/bin/lilypond: ${SOURCEDIR}/lilypond/configure ${SOURCEDIR}/lilypond/build ${MACPORTS_ROOT}/include/libguile.h | ${BUILDDIR} ${SOURCEDIR}/lilypond/build select-python
 	cd "${SOURCEDIR}/lilypond/build" &&\
 	${PORT} select --set gcc mp-gcc9 &&\
 	export CC="${MACPORTS_ROOT}/bin/gcc" &&\
@@ -104,7 +105,7 @@ ${BUILDDIR}/bin/lilypond: ${SOURCEDIR}/lilypond/configure ${SOURCEDIR}/lilypond/
 	export GUILE_CONFIG="${MACPORTS_ROOT}/bin/guile18-config" &&\
 	export GUILE_TOOLS="${MACPORTS_ROOT}/bin/guile18-tools" &&\
 	../configure --with-texgyre-dir="${MACPORTS_ROOT}/share/texmf-texlive/fonts/opentype/public/tex-gyre/" --prefix="${BUILDDIR}" &&\
-	${MAKE} && ${MAKE} install
+	${MAKE} PYTHON="${ENV_PYTHON} -tt" TARGET_PYTHON="${ENV_PYTHON} -tt" && ${MAKE} install
 
 
 ${APP_BUNDLE}: | lilypad-venv
