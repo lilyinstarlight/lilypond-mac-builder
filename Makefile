@@ -21,6 +21,7 @@ MKDIR_P := mkdir -p
 MOVE := mv -v
 PORT := "${MACPORTS_ROOT}/bin/port"
 RM_RF := rm -rf
+bundle-dylib="${MACPORTS_ROOT}/bin/dylibbundler" -cd -of -b -x "$(1)" -d "${RESOURCES}/lib/" -p "@executable_path/../lib/"
 
 LILYPOND_VERSION=2.19.83# TODO: we should be able to get this from the source
 TIMESTAMP=$(shell date -j "+%Y%m%d%H%M%S")
@@ -45,13 +46,13 @@ bundle-dylibs: copy-binaries copy-guile-libraries
 	done &&\
 	for dir in lib bin libexec; do \
 	  for l in $$(find "${RESOURCES}/$${dir}"); do \
-	    dylibbundler -cd -of -b -x "$$l" -d "${RESOURCES}/lib/" -p "@executable_path/../lib/";\
+	    $(call bundle-dylib,$$l);\
 	  done;\
 	done &&\
 	: "for some reason some of these need an extra pass; maybe a bug in dylibbundler?" &&\
 	for l in $$(find "${RESOURCES}/lib"); do \
 	  if [ -n "$$(otool -L "$$l" | grep "${MACPORTS_ROOT}")" ]; then \
-	    dylibbundler -cd -of -b -x "$$l" -d "${RESOURCES}/lib/" -p "@executable_path/../lib/";\
+	    $(call bundle-dylib,$$l);\
 	  fi;\
 	done
 
