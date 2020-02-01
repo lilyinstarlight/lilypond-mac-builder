@@ -42,7 +42,7 @@ tar: | ${DISTDIR}
 	git tag "v${VERSION_AND_BUILD}" &&\
 	git push origin "v${VERSION_AND_BUILD}"
 
-lilypond-all: bundle-dylibs copy-support-files
+lilypond-all: bundle-dylibs copy-support-files copy-welcome-file
 
 bundle-dylibs: copy-binaries copy-guile-libraries
 	for dir in $$(find "${MACPORTS_ROOT}/lib" -type d -maxdepth 1); do \
@@ -59,6 +59,9 @@ bundle-dylibs: copy-binaries copy-guile-libraries
 	    $(call bundle-dylib,$$l);\
 	  fi;\
 	done
+
+copy-welcome-file: ${RESOURCES}/share
+	${COPY} "${RESOURCES}/share/lilypond/${LILYPOND_VERSION}/ly/Welcome-to-LilyPond-MacOS.ly" "${RESOURCES}"
 
 copy-binaries: ${RESOURCES}/bin ${RESOURCES}/libexec/lilypond-bin ${RESOURCES}/share
 
@@ -157,4 +160,4 @@ ${SOURCEDIR}/lilypond: | ${SOURCEDIR}
 ${BUILDDIR} ${SOURCEDIR} ${SOURCEDIR}/lilypond/build ${DISTDIR}:
 	${MKDIR_P} "$@"
 
-.PHONY: default clean buildclean lilypond-all copy-binaries copy-guile-libraries copy-support-files bundle-dylibs lilypad-venv select-python tar
+.PHONY: default clean buildclean lilypond-all copy-binaries copy-guile-libraries copy-support-files copy-welcome-file bundle-dylibs lilypad-venv select-python tar
