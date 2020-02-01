@@ -90,8 +90,7 @@ ${RESOURCES}/share: ${APP_BUNDLE} ${BUILDDIR}/share/lilypond
 
 ${RESOURCES}/etc: ${APP_BUNDLE}
 	${MKDIR_P} "${RESOURCES}/etc" &&\
-	${COPY} "${OLD_RESOURCES}/etc/" "${RESOURCES}/etc" &&\
-	${COPY} "${EXTRA_FILES}/gs.reloc" "${RESOURCES}/etc/relocate"
+	${COPY} "${EXTRA_FILES}/etc/" "${RESOURCES}/etc"
 
 ${RESOURCES}/license: ${APP_BUNDLE}
 	${MKDIR_P} "${RESOURCES}/license" &&\

@@ -1,5 +1,6 @@
 
-prependdir GS_FONTPATH=$INSTALLER_PREFIX/share/ghostscript/9.21/fonts
-prependdir GS_FONTPATH=$INSTALLER_PREFIX/share/gs/fonts
-prependdir GS_LIB=$INSTALLER_PREFIX/share/ghostscript/9.21/Resource
-prependdir GS_LIB=$INSTALLER_PREFIX/share/ghostscript/9.21/Resource/Init
+prependdir GS_FONTPATH=$INSTALLER_PREFIX/share/ghostscript/9.50/fonts
+prependdir GS_FONTPATH=$INSTALLER_PREFIX/share/ghostscript/fonts
+prependdir GS_LIB=$INSTALLER_PREFIX/share/ghostscript/9.50/Resource
+prependdir GS_LIB=$INSTALLER_PREFIX/share/ghostscript/9.50/Resource/Init
+set GS_OPTIONS="-sICCProfilesDir=${INSTALLER_PREFIX}/share/ghostscript/9.50/iccprofiles/"
