@@ -26,6 +26,7 @@ bundle-dylib="${MACPORTS_ROOT}/bin/dylibbundler" -cd -of -b -x "$(1)" -d "${RESO
 
 LILYPOND_VERSION=2.19.83# TODO: we should be able to get this from the source
 TIMESTAMP=$(shell date -j "+%Y%m%d%H%M%S")
+VERSION_AND_BUILD=${LILYPOND_VERSION}.build${TIMESTAMP}
 
 default: lilypond-all
 
@@ -37,7 +38,9 @@ buildclean:
 
 tar: | ${DISTDIR}
 	cd "${BUILDDIR}" &&\
-	tar cvzf "${DISTDIR}/lilypond-${LILYPOND_VERSION}.build${TIMESTAMP}-darwin-64.tar.gz" LilyPond.app
+	tar cvzf "${DISTDIR}/lilypond-${VERSION_AND_BUILD}-darwin-64.tar.gz" LilyPond.app &&\
+	git tag "v${VERSION_AND_BUILD}" &&\
+	git push origin "v${VERSION_AND_BUILD}"
 
 lilypond-all: bundle-dylibs copy-support-files
 
