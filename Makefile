@@ -10,8 +10,6 @@ LILYPOND_BRANCH=stable/test
 VENV=venv
 APP_BUNDLE=${BUILDDIR}/LilyPond.app
 RESOURCES=${APP_BUNDLE}/Contents/Resources
-OLD_BUNDLE=${HOME}/32-bit-app/LilyPond.app
-OLD_RESOURCES=${OLD_BUNDLE}/Contents/Resources
 
 PATH := ${MACPORTS_ROOT}/bin:${MACPORTS_ROOT}/sbin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin
 SHELL := env PATH="${PATH}" "${SHELL}"
@@ -90,12 +88,11 @@ ${RESOURCES}/share: ${APP_BUNDLE} ${BUILDDIR}/share/lilypond
 
 ${RESOURCES}/etc: ${APP_BUNDLE}
 	${MKDIR_P} "${RESOURCES}/etc" &&\
-	${COPY} "${OLD_RESOURCES}/etc/" "${RESOURCES}/etc" &&\
-	${COPY} "${EXTRA_FILES}/gs.reloc" "${RESOURCES}/etc/relocate"
+	${COPY} "${EXTRA_FILES}/etc/" "${RESOURCES}/etc"
 
 ${RESOURCES}/license: ${APP_BUNDLE}
 	${MKDIR_P} "${RESOURCES}/license" &&\
-	${COPY} "${OLD_RESOURCES}/license/" "${RESOURCES}/license"
+	${COPY} "${EXTRA_FILES}/license/" "${RESOURCES}/license"
 
 copy-guile-libraries: ${APP_BUNDLE} ${BUILDDIR}/bin/lilypond
 	${MKDIR_P} "${RESOURCES}/lib" &&\
