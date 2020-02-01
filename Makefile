@@ -115,6 +115,7 @@ ${BUILDDIR}/bin/lilypond: ${SOURCEDIR}/lilypond/configure ${SOURCEDIR}/lilypond/
 ${APP_BUNDLE}: | lilypad-venv
 	cd "${SOURCEDIR}/lilypad/macosx" &&\
 	source "${VENV}/bin/activate" &&\
+	echo "${LILYPOND_VERSION}\c" >|VERSION &&\
 	MACOSX_DEPLOYMENT_TARGET=10.5 python ./setup.py --verbose py2app --icon=lilypond.icns --dist-dir "${BUILDDIR}"
 
 lilypad-venv: ${SOURCEDIR}/lilypad/macosx/${VENV}
