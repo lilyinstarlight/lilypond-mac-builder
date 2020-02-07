@@ -28,6 +28,8 @@ VERSION_AND_BUILD=${LILYPOND_VERSION}.build${TIMESTAMP}
 
 default: lilypond-all
 
+all-with-tar: lilypond-all tar
+
 clean: buildclean
 	${RM_RF} "${SOURCEDIR}"
 
@@ -157,4 +159,4 @@ ${SOURCEDIR}/lilypond: | ${SOURCEDIR}
 ${BUILDDIR} ${SOURCEDIR} ${SOURCEDIR}/lilypond/build ${DISTDIR}:
 	${MKDIR_P} "$@"
 
-.PHONY: default clean buildclean lilypond-all copy-binaries copy-guile-libraries copy-support-files copy-welcome-file bundle-dylibs lilypad-venv select-python tar
+.PHONY: default all-with-tar clean buildclean lilypond-all copy-binaries copy-guile-libraries copy-support-files copy-welcome-file bundle-dylibs lilypad-venv select-python tar
