@@ -16,7 +16,8 @@ This distills to the following packages to be port installed (with their depende
 * texlive-metapost
 * guile18 (which needs to be symlinked: `ln -s ${MACPORTS_ROOT}/include/libguile18.h ${MACPORTS_ROOT}/include/libguile.h`, and set env: `GUILE="${MACPORTS_ROOT}/bin/guile18" GUILE_CONFIG="${MACPORTS_ROOT}/bin/guile18-config" GUILE_TOOLS="${MACPORTS_ROOT}/bin/guile18-tools"`)
 * fontforge
-* texi2html
+* texi2html: 2.20 requires <=1.82, installed from Git commit https://github.com/macports/macports-ports/commit/8259e5e61533101fbcfd96ebba0d66533b27381c following the instructions at https://trac.macports.org/wiki/howto/InstallingOlderPort:
+  * `git clone --single-branch https://github.com/macports/macports-ports.git old-ports && cd old-ports && git checkout 8259e5e61533101fbcfd96ebba0d66533b27381c && cd textproc/texi2html && ${MACPORTS_ROOT}/bin/port install`
 * t1utils
 * dblatex
 * texlive-lang-cyrillic
