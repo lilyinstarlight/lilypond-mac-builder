@@ -6,7 +6,7 @@ LILYPAD_BRANCH=master
 LILYPAD_ARCHIVE=https://github.com/gperciva/lilypad/archive/${LILYPAD_BRANCH}.tar.gz
 MACPORTS_ROOT=${CURDIR}/macports
 LILYPOND_GIT=https://git.savannah.gnu.org/git/lilypond.git
-LILYPOND_BRANCH=stable/test
+LILYPOND_BRANCH=stable/2.20
 VENV=venv
 APP_BUNDLE=${BUILDDIR}/LilyPond.app
 RESOURCES=${APP_BUNDLE}/Contents/Resources
@@ -22,7 +22,7 @@ RM_RF := rm -rf
 ENV_PYTHON := /usr/bin/env python
 bundle-dylib="${MACPORTS_ROOT}/bin/dylibbundler" -cd -of -b -x "$(1)" -d "${RESOURCES}/lib/" -p "@executable_path/../lib/"
 
-LILYPOND_VERSION=2.19.83# TODO: we should be able to get this from the source
+LILYPOND_VERSION=2.20.0# TODO: we should be able to get this from the source
 TIMESTAMP=$(shell date -j "+%Y%m%d%H%M%S")
 VERSION_AND_BUILD=${LILYPOND_VERSION}.build${TIMESTAMP}
 
