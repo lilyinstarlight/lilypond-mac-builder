@@ -6,7 +6,8 @@ LILYPAD_BRANCH=master
 LILYPAD_ARCHIVE=https://github.com/gperciva/lilypad/archive/${LILYPAD_BRANCH}.tar.gz
 MACPORTS_ROOT=${CURDIR}/macports
 LILYPOND_GIT=https://git.savannah.gnu.org/git/lilypond.git
-LILYPOND_BRANCH=stable/2.20
+LILYPOND_VERSION=2.21.2# TODO: we should be able to get this from the source
+LILYPOND_BRANCH=release/${LILYPOND_VERSION}-1
 VENV=venv
 APP_BUNDLE=${BUILDDIR}/LilyPond.app
 RESOURCES=${APP_BUNDLE}/Contents/Resources
@@ -22,7 +23,6 @@ RM_RF := rm -rf
 ENV_PYTHON := /usr/bin/env python
 bundle-dylib="${MACPORTS_ROOT}/bin/dylibbundler" -cd -of -b -x "$(1)" -d "${RESOURCES}/lib/" -p "@executable_path/../lib/"
 
-LILYPOND_VERSION=2.20.0# TODO: we should be able to get this from the source
 TIMESTAMP=$(shell date -j "+%Y%m%d%H%M%S")
 VERSION_AND_BUILD=${LILYPOND_VERSION}.build${TIMESTAMP}
 
@@ -101,7 +101,7 @@ copy-guile-libraries: ${APP_BUNDLE} ${BUILDDIR}/bin/lilypond
 	${COPY} "${MACPORTS_ROOT}/lib/guile18" "${RESOURCES}/lib" &&\
 	${COPY} "${MACPORTS_ROOT}/lib/libguile"* "${RESOURCES}/lib"
 
-${BUILDDIR}/bin/lilypond: ${SOURCEDIR}/lilypond/configure ${SOURCEDIR}/lilypond/build ${MACPORTS_ROOT}/include/libguile.h | ${BUILDDIR} ${SOURCEDIR}/lilypond/build select-python
+${BUILDDIR}/bin/lilypond: ${SOURCEDIR}/lilypond/configure ${SOURCEDIR}/lilypond/build ${MACPORTS_ROOT}/include/libguile.h | ${BUILDDIR} ${SOURCEDIR}/lilypond/build select-python3
 	cd "${SOURCEDIR}/lilypond/build" &&\
 	${PORT} select --set gcc mp-gcc9 &&\
 	export CC="${MACPORTS_ROOT}/bin/gcc" &&\
@@ -122,7 +122,7 @@ ${APP_BUNDLE}: | lilypad-venv
 
 lilypad-venv: ${SOURCEDIR}/lilypad/macosx/${VENV}
 
-${SOURCEDIR}/lilypad/macosx/${VENV}: ${SOURCEDIR}/lilypad select-python
+${SOURCEDIR}/lilypad/macosx/${VENV}: ${SOURCEDIR}/lilypad select-python2
 	cd "${SOURCEDIR}/lilypad/macosx" && virtualenv "${VENV}"
 
 ${SOURCEDIR}/lilypad: | ${SOURCEDIR}
@@ -131,7 +131,9 @@ ${SOURCEDIR}/lilypad: | ${SOURCEDIR}
 	${RM_RF} lilypad &&\
 	mv "lilypad-${LILYPAD_BRANCH}" lilypad
 
-select-python: ${MACPORTS_ROOT}/bin/python2.7 ${MACPORTS_ROOT}/bin/virtualenv-2.7
+# TODO: use a function to abstract the Python stuff.
+
+select-python2: ${MACPORTS_ROOT}/bin/python2.7 ${MACPORTS_ROOT}/bin/virtualenv-2.7
 	${PORT} select --set python python27 && ${PORT} select --set virtualenv virtualenv27
 
 ${MACPORTS_ROOT}/bin/python2.7:
@@ -139,6 +141,15 @@ ${MACPORTS_ROOT}/bin/python2.7:
 
 ${MACPORTS_ROOT}/bin/virtualenv-2.7:
 	${PORT} install py27-virtualenv
+
+select-python3: ${MACPORTS_ROOT}/bin/python3.8 ${MACPORTS_ROOT}/bin/virtualenv-3.8
+	${PORT} select --set python python38 && ${PORT} select --set virtualenv virtualenv38
+
+${MACPORTS_ROOT}/bin/python3.8:
+	${PORT} install python38
+
+${MACPORTS_ROOT}/bin/virtualenv-3.8:
+	${PORT} install py38-virtualenv
 
 ${MACPORTS_ROOT}/include/libguile.h: ${MACPORTS_ROOT}/include/libguile18.h
 	ln -s "$<" "$@"
@@ -154,9 +165,9 @@ ${SOURCEDIR}/lilypond: | ${SOURCEDIR}
 	if [ ! -d lilypond ]; then \
 	  git clone "${LILYPOND_GIT}" lilypond;\
 	fi &&\
-	cd lilypond && git checkout "${LILYPOND_BRANCH}" && git pull
+	cd lilypond && git fetch origin && git checkout "${LILYPOND_BRANCH}"
 
 ${BUILDDIR} ${SOURCEDIR} ${SOURCEDIR}/lilypond/build ${DISTDIR}:
 	${MKDIR_P} "$@"
 
-.PHONY: default all-with-tar clean buildclean lilypond-all copy-binaries copy-guile-libraries copy-support-files copy-welcome-file bundle-dylibs lilypad-venv select-python tar
+.PHONY: default all-with-tar clean buildclean lilypond-all copy-binaries copy-guile-libraries copy-support-files copy-welcome-file bundle-dylibs lilypad-venv select-python2 select-python3 tar
