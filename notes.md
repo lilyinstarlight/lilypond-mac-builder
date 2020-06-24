@@ -134,6 +134,8 @@ warning: no such directory: /Users/marnen/Downloads/LilyPond.app/Contents/Resour
 
 It looks like what's going on is that we built this bundle with GS 9.50, so the path names are a bit different. So we just need to replace the gs.reloc file.
 
+For LilyPond 2.21, at least, we also need to set PATH (in the Lily wrapper script) so it doesn't try to use the system GhostScript.
+
 ## TODO
 
 Going forward we should probably use pipenv and a Pipfile to manage the dependencies.
