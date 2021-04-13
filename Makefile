@@ -5,7 +5,7 @@ EXTRA_FILES=${CURDIR}/extra-files
 DISTDIR=${CURDIR}/dist
 
 LILYPAD_BRANCH=master
-LILYPAD_ARCHIVE=https://github.com/gperciva/lilypad/archive/${LILYPAD_BRANCH}.tar.bz2
+LILYPAD_ARCHIVE=https://github.com/gperciva/lilypad/archive/${LILYPAD_BRANCH}.tar.gz
 LILYPAD_PATCH=${PATCHES}/lilypad-python3.patch
 
 MACPORTS_ROOT=/opt/local
