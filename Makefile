@@ -1,30 +1,40 @@
 BUILDDIR=${CURDIR}/build
 SOURCEDIR=${CURDIR}/source
+PATCHES=${CURDIR}/patches
 EXTRA_FILES=${CURDIR}/extra-files
 DISTDIR=${CURDIR}/dist
+
 LILYPAD_BRANCH=master
 LILYPAD_ARCHIVE=https://github.com/gperciva/lilypad/archive/${LILYPAD_BRANCH}.tar.gz
-MACPORTS_ROOT=${CURDIR}/macports
+LILYPAD_PATCH=${PATCHES}/lilypad-python3.patch
+
+MACPORTS_ROOT=/opt/local
+
 LILYPOND_GIT=https://git.savannah.gnu.org/git/lilypond.git
-LILYPOND_VERSION=2.21.2# TODO: we should be able to get this from the source
+LILYPOND_VERSION=2.22.0
 LILYPOND_BRANCH=release/${LILYPOND_VERSION}-1
+
 VENV=venv
+
 APP_BUNDLE=${BUILDDIR}/LilyPond.app
 RESOURCES=${APP_BUNDLE}/Contents/Resources
 
 PATH := ${MACPORTS_ROOT}/bin:${MACPORTS_ROOT}/sbin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin
 SHELL := env PATH="${PATH}" "${SHELL}"
 
+PRIVILEGED := sudo
+
 COPY := cp -av
 MKDIR_P := mkdir -p
 MOVE := mv -v
-PORT := "${MACPORTS_ROOT}/bin/port"
+PORT := ${PRIVILEGED} "${MACPORTS_ROOT}/bin/port"
+LN_S := ${PRIVILEGED} ln -s
 RM_RF := rm -rf
-ENV_PYTHON := /usr/bin/env python
+ENV_PYTHON := /usr/bin/env python3
 bundle-dylib="${MACPORTS_ROOT}/bin/dylibbundler" -cd -of -b -x "$(1)" -d "${RESOURCES}/lib/" -p "@executable_path/../lib/"
 
 TIMESTAMP=$(shell date -j "+%Y%m%d%H%M%S")
-VERSION_AND_BUILD=${LILYPOND_VERSION}.build${TIMESTAMP}
+VERSION_AND_BUILD=${LILYPOND_VERSION}-build${TIMESTAMP}
 
 default: lilypond-all
 
@@ -38,13 +48,11 @@ buildclean:
 
 tar: | ${DISTDIR}
 	cd "${BUILDDIR}" &&\
-	tar cvzf "${DISTDIR}/lilypond-${VERSION_AND_BUILD}-darwin-64.tar.gz" LilyPond.app &&\
-	git tag "v${VERSION_AND_BUILD}" &&\
-	git push origin "v${VERSION_AND_BUILD}"
+	tar cvjf "${DISTDIR}/lilypond-${VERSION_AND_BUILD}.darwin-64.tar.gz" LilyPond.app
 
 lilypond-all: bundle-dylibs copy-support-files copy-welcome-file
 
-bundle-dylibs: copy-binaries copy-guile-libraries
+bundle-dylibs: ${MACPORTS_ROOT}/bin/dylibbundler copy-binaries copy-guile-libraries
 	for dir in $$(find "${MACPORTS_ROOT}/lib" -type d -maxdepth 1); do \
 	  export DYLD_LIBRARY_PATH="$$dir:$${DYLD_LIBRARY_PATH}";\
 	done &&\
@@ -86,7 +94,8 @@ ${RESOURCES}/bin: ${APP_BUNDLE} ${BUILDDIR}/bin/lilypond
 ${RESOURCES}/share: ${APP_BUNDLE} ${BUILDDIR}/share/lilypond
 	${COPY} "${BUILDDIR}/share" "$@" &&\
 	xargs -I% <"${EXTRA_FILES}/share" cp -anv "${MACPORTS_ROOT}/share/%" "${RESOURCES}/share/%" &&\
-	cd "$@/lilypond" && ln -s "${LILYPOND_VERSION}" current
+	cd "$@/lilypond" && ln -s "${LILYPOND_VERSION}" current &&\
+	cd "$@/ghostscript" && ln -s "$$(ls | grep '^\d')" current
 
 ${RESOURCES}/etc: ${APP_BUNDLE}
 	${MKDIR_P} "${RESOURCES}/etc" &&\
@@ -103,14 +112,16 @@ copy-guile-libraries: ${APP_BUNDLE} ${BUILDDIR}/bin/lilypond
 
 ${BUILDDIR}/bin/lilypond: ${SOURCEDIR}/lilypond/configure ${SOURCEDIR}/lilypond/build ${MACPORTS_ROOT}/include/libguile.h | ${BUILDDIR} ${SOURCEDIR}/lilypond/build select-python3
 	cd "${SOURCEDIR}/lilypond/build" &&\
+	${PORT} install gcc_select gcc9 &&\
 	${PORT} select --set gcc mp-gcc9 &&\
+	${PORT} install pkgconfig flex bison texlive-fonts-recommended texlive-metapost fontforge t1utils dblatex urw-core35-fonts extractpdfmark &&\
 	export CC="${MACPORTS_ROOT}/bin/gcc" &&\
 	export CXX="${MACPORTS_ROOT}/bin/g++" &&\
+	export CXXCPP="${MACPORTS_ROOT}/bin/g++ -E" &&\
 	export LTDL_LIBRARY_PATH="${MACPORTS_ROOT}/lib" &&\
-	export GUILE="${MACPORTS_ROOT}/bin/guile18" &&\
-	export GUILE_CONFIG="${MACPORTS_ROOT}/bin/guile18-config" &&\
-	export GUILE_TOOLS="${MACPORTS_ROOT}/bin/guile18-tools" &&\
-	../configure --with-texgyre-dir="${MACPORTS_ROOT}/share/texmf-texlive/fonts/opentype/public/tex-gyre/" --prefix="${BUILDDIR}" &&\
+	export PKG_CONFIG="${MACPORTS_ROOT}/bin/pkg-config" &&\
+	export GUILE_FLAVOR="guile-1.8" &&\
+	../configure --with-flexlexer-dir="${MACPORTS_ROOT}/include" --with-texgyre-dir="${MACPORTS_ROOT}/share/texmf-texlive/fonts/opentype/public/tex-gyre/" --prefix="${BUILDDIR}" --disable-documentation &&\
 	${MAKE} PYTHON="${ENV_PYTHON} -tt" TARGET_PYTHON="${ENV_PYTHON} -tt" && ${MAKE} install
 
 
@@ -122,25 +133,15 @@ ${APP_BUNDLE}: | lilypad-venv
 
 lilypad-venv: ${SOURCEDIR}/lilypad/macosx/${VENV}
 
-${SOURCEDIR}/lilypad/macosx/${VENV}: ${SOURCEDIR}/lilypad select-python2
+${SOURCEDIR}/lilypad/macosx/${VENV}: ${SOURCEDIR}/lilypad select-python3
 	cd "${SOURCEDIR}/lilypad/macosx" && virtualenv "${VENV}"
 
 ${SOURCEDIR}/lilypad: | ${SOURCEDIR}
 	cd "${SOURCEDIR}" &&\
 	curl -L "${LILYPAD_ARCHIVE}" | tar xvz &&\
+	patch -p1 -d "lilypad-${LILYPAD_BRANCH}" <"${LILYPAD_PATCH}" &&\
 	${RM_RF} lilypad &&\
 	mv "lilypad-${LILYPAD_BRANCH}" lilypad
-
-# TODO: use a function to abstract the Python stuff.
-
-select-python2: ${MACPORTS_ROOT}/bin/python2.7 ${MACPORTS_ROOT}/bin/virtualenv-2.7
-	${PORT} select --set python python27 && ${PORT} select --set virtualenv virtualenv27
-
-${MACPORTS_ROOT}/bin/python2.7:
-	${PORT} install python27
-
-${MACPORTS_ROOT}/bin/virtualenv-2.7:
-	${PORT} install py27-virtualenv
 
 select-python3: ${MACPORTS_ROOT}/bin/python3.8 ${MACPORTS_ROOT}/bin/virtualenv-3.8
 	${PORT} select --set python python38 && ${PORT} select --set virtualenv virtualenv38
@@ -152,10 +153,13 @@ ${MACPORTS_ROOT}/bin/virtualenv-3.8:
 	${PORT} install py38-virtualenv
 
 ${MACPORTS_ROOT}/include/libguile.h: ${MACPORTS_ROOT}/include/libguile18.h
-	ln -s "$<" "$@"
+	${LN_S} "$<" "$@"
 
 ${MACPORTS_ROOT}/include/libguile18.h:
 	${PORT} install guile18
+
+${MACPORTS_ROOT}/bin/dylibbundler:
+	${PORT} install dylibbundler
 
 ${SOURCEDIR}/lilypond/configure: | ${SOURCEDIR}/lilypond
 	cd "$|" && ./autogen.sh --noconfigure
@@ -170,4 +174,4 @@ ${SOURCEDIR}/lilypond: | ${SOURCEDIR}
 ${BUILDDIR} ${SOURCEDIR} ${SOURCEDIR}/lilypond/build ${DISTDIR}:
 	${MKDIR_P} "$@"
 
-.PHONY: default all-with-tar clean buildclean lilypond-all copy-binaries copy-guile-libraries copy-support-files copy-welcome-file bundle-dylibs lilypad-venv select-python2 select-python3 tar
+.PHONY: default all-with-tar clean buildclean lilypond-all copy-binaries copy-guile-libraries copy-support-files copy-welcome-file bundle-dylibs lilypad-venv select-python3 tar

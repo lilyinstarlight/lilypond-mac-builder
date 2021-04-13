@@ -1,4 +1,0 @@
-app-bundle:
-  script:
-    - make clean
-    - make

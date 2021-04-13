@@ -1,0 +1,217 @@
+diff --git a/macosx/LilyPond.py b/macosx/LilyPond.py
+index f395c74..25c36a1 100644
+--- a/macosx/LilyPond.py
++++ b/macosx/LilyPond.py
+@@ -5,14 +5,17 @@ from Foundation import *
+ from AppKit import NSWorkspace, NSDocumentController, NSDocument, NSMenu, NSLog
+ import AppKit
+ 
+-import URLHandlerClass
+ import subprocess
+ import os
+ import glob
+ import string
+ import re
+-import urllib
++import sys
++import urllib.request, urllib.parse, urllib.error
++
++sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+ 
++import URLHandlerClass
+ from ProcessLog import ProcessLogWindowController
+ 
+ firstStart = True
+@@ -38,7 +41,7 @@ def lily_version ():
+ 
+     (stdoutdata, stderrdata) = call.communicate()
+ 
+-    versionline = stdoutdata.splitlines()[0]
++    versionline = stdoutdata.decode().splitlines()[0]
+     version = versionline.split(' ')[2]
+     return tuple (version.split('.'))
+ 
+@@ -47,7 +50,7 @@ def google_lilypond (str):
+ 
+     url = '%s site:lilypond.org v%s.%s' % (str, maj, min)
+     url = re.sub (' ', '+', url)
+-    url = urllib.quote (url, safe='+')
++    url = urllib.parse.quote (url, safe='+')
+     url = 'http://www.google.com/search?q=%s' % url
+     open_url (url)
+ 
+@@ -71,9 +74,9 @@ class TinyTinyDocument(NSDocument):
+ 
+     startupPath = None  # fallback if instance has no startupPath.
+     def init(self):
+-	self = super(TinyTinyDocument, self).init()
+-	self.processLogWindowController = None
+-	return self
++        self = super(TinyTinyDocument, self).init()
++        self.processLogWindowController = None
++        return self
+     
+     def windowNibName(self):
+         return "TinyTinyDocument"
+@@ -89,10 +92,9 @@ class TinyTinyDocument(NSDocument):
+         return True
+ 
+     def writeToFile_ofType_(self, path, tp):
+-        f = file(path, "w")
+-        text = self.textView.string()
+-        f.write(text.encode("utf8"))
+-        f.close()
++        with open(path, "w", encoding="utf-8") as f:
++            text = self.textView.string()
++            f.write(text)
+ 
+         return True
+ 
+@@ -108,9 +110,8 @@ class TinyTinyDocument(NSDocument):
+ 
+     @objc.python_method
+     def readFromUTF8(self, path):
+-        f = file(path)
+-        text = unicode(f.read(), "utf8")
+-        f.close()
++        with open(path, "r", encoding="utf-8") as f:
++            text = f.read()
+         self.textView.setString_(text)
+ 
+     def compileFile_ (self, sender):
+diff --git a/macosx/ProcessLog.py b/macosx/ProcessLog.py
+index 4bab485..3c7941d 100644
+--- a/macosx/ProcessLog.py
++++ b/macosx/ProcessLog.py
+@@ -35,7 +35,7 @@ class ProcessLog(NSObject):
+         size = 1024
+         str = ''
+         while True:
+-            s = unicode(os.read (fd, size), "utf-8")
++            s = os.read (fd, size).decode()
+             str += s
+             if (len (s) == size):
+                 size *= 2
+@@ -137,7 +137,7 @@ class ProcessLogWindowController(NSWindowController):
+         self.throbber.stopAnimation_ (self)
+ 
+         cb = self.finish_callback
+-        if cb <> None:
++        if cb != None:
+             cb (self)
+ 
+         
+diff --git a/macosx/URLHandlerClass.py b/macosx/URLHandlerClass.py
+index 9b4487e..9cefee0 100644
+--- a/macosx/URLHandlerClass.py
++++ b/macosx/URLHandlerClass.py
+@@ -3,7 +3,7 @@ from Foundation import *
+ from AppKit import *
+ import re
+ import string
+-import urllib
++import urllib.parse
+ 
+ class URLHandlerClass(NSScriptCommand):
+     def performDefaultImplementation(self):
+@@ -13,7 +13,7 @@ class URLHandlerClass(NSScriptCommand):
+ 
+     @objc.python_method
+     def openURL (self, urlString):
+-        urlString = urllib.unquote (urlString)
++        urlString = urllib.parse.unquote (urlString)
+         m = re.match ("^textedit://([^:]*):?([0-9]*):?([0-9]*):?([0-9]*)$", urlString)
+         if m == None:
+             NSLog ("URL doesn't match")
+@@ -23,9 +23,9 @@ class URLHandlerClass(NSScriptCommand):
+         char = 1
+         column = 1
+         try:
+-            line = string.atoi (m.group (2))
+-            char = string.atoi (m.group (3))
+-            column = string.atoi (m.group (4))
++            line = int (m.group (2))
++            char = int (m.group (3))
++            column = int (m.group (4))
+         except ValueError:
+             pass
+         
+@@ -37,8 +37,8 @@ class URLHandlerClass(NSScriptCommand):
+         line -= 1
+         char -= 1
+ 
+-        lines = string.split (str, '\n')
+-        lineChars = sum (map (lambda x: len (x) + 1, lines[:line]))
++        lines = str.split ('\n')
++        lineChars = sum (len (x) + 1 for x in lines[:line])
+         if line < len (lines):
+             lineChars += min (char, len (lines[line]))
+         return lineChars + 1
+diff --git a/macosx/VERSION b/macosx/VERSION
+index 6cffa4a..f1270b4 100644
+--- a/macosx/VERSION
++++ b/macosx/VERSION
+@@ -1 +1 @@
+-2.15.22-1
++2.22.0
+\ No newline at end of file
+diff --git a/macosx/lilycall.py b/macosx/lilycall.py
+index eee483b..d6b3564 100644
+--- a/macosx/lilycall.py
++++ b/macosx/lilycall.py
+@@ -122,7 +122,7 @@ class Call:
+ 			self.error_string = ('Cannot write program directory\n'
+ 					     +'This program must be installed before using.')
+ 			
+-		elif dir[0] <> '/':
++		elif dir[0] != '/':
+ 			self.error_string = ("Application directory should be absolute. "
+ 					     + "Was: %s\n"
+ 					     % dir)
+@@ -150,7 +150,7 @@ class Call:
+ 
+ 	def print_env (self):
+ 		for (k,v) in self.env.items ():
+-			print 'export %s="%s"' % (k,v)
++			print('export %s="%s"' % (k,v))
+ 
+ 	def get_process (self, executable, args):
+ 		out = None
+@@ -161,8 +161,8 @@ class Call:
+ 
+ 		if debug:
+ 			self.print_env ()
+-			print 'args: ', args
+-			print 'executable: ', executable
++			print('args: ', args)
++			print('executable: ', executable)
+ 
+ 		self.args[0] = os.path.split (self.args[0])[1]
+ 		process = subprocess.Popen (args,
+@@ -194,7 +194,7 @@ class Call:
+ 		    b = '/usr/bin/open'
+ 		    args = [b] + pdfs
+ 		    if debug:
+-			    print 'invoking ', args
++			    print('invoking ', args)
+ 		    os.spawnv (os.P_NOWAIT, b, [b] + pdfs)  
+ 
+ ################################################################
+diff --git a/macosx/setup.py b/macosx/setup.py
+index 81b69d2..bd3d437 100644
+--- a/macosx/setup.py
++++ b/macosx/setup.py
+@@ -40,10 +40,11 @@ setup(
+ 		'Credits.html',
+ 		'URLHandle.scriptSuite',
+ 		'URLHandle.scriptTerminology',
++		'URLHandlerClass.py',
+ 		'Welcome-to-LilyPond-MacOS.ly'
+ 		],
+     packages=['distlib'],
+-    package_dir={'distlib': 'venv/lib/python2.7/site-packages/pip/_vendor/distlib'},
++    package_dir={'distlib': 'venv/lib/python3.8/site-packages/pip/_vendor/distlib'},
+     options=dict(py2app=dict(plist=plist)),
+-    setup_requires=["py2app==0.19", "pyobjc"],
++    setup_requires=["py2app", "pyobjc"],
+ )

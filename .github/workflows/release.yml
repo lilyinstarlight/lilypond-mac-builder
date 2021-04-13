@@ -1,0 +1,167 @@
+name: Release Builds
+
+on:
+  push:
+    branches:
+      - main
+    tags:
+      - 'v*'
+
+jobs:
+  macos:
+    name: macOS Build
+    runs-on: macos-10.15
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: recursive
+
+      - name: Selecting and Linking /Applications/Xcode.app
+        run: |
+          sudo xcode-select -s /Applications/Xcode_12.1.1.app/Contents/Developer
+          rm -f /Applications/Xcode.app
+          ln -s "$(dirname "$(dirname "$(xcode-select -p)")")" /Applications/Xcode.app
+
+      - name: Install MacPorts
+        run: |
+          wget https://github.com/macports/macports-base/releases/download/v2.6.4/MacPorts-2.6.4-10.15-Catalina.pkg
+          sudo installer -pkg MacPorts-2.6.4-10.15-Catalina.pkg -target /
+          echo /opt/local/bin >> "$GITHUB_PATH"
+
+      - name: Build LilyPond.app
+        run: |
+          make all-with-tar
+
+      - uses: actions/upload-artifact@v2
+        with:
+          name: lilypond-macos
+          path: dist/lilypond-*.darwin-64.tar.gz
+
+  upload:
+    name: Upload Release
+    needs: [macos]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v2
+        with:
+          name: lilypond-macos
+          path: lilypond-macos
+
+      - uses: actions/github-script@v2
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const fs = require('fs');
+            const os = require('os');
+
+            const release = context.ref.startsWith('refs/tags/v');
+
+            const tag = release ? context.ref.replace(/^refs\/tags\//i, '') : 'continuous';
+
+            const name = release ? `LilyPond macOS 64-bit Build ${tag}` : 'LilyPond macOS 64-bit Build Continuous';
+            const body = release ? '' : 'Continuous builds are freshly baked on every push to the main branch.';
+            const prerelease = !release;
+            const draft = release;
+
+            const assets = {
+              [`lilypond-${tag}.darwin-64.tar.gz`]: './lilypond-macos/' + fs.readdirSync('./lilypond-macos/').filter((name) => name.startsWith('lilypond-') && name.endsWith('.darwin-64.tar.gz'))[0],
+            };
+
+            core.startGroup('Release information');
+
+            core.info(`Release: ${release ? 'Yes' : 'No'}`);
+            core.info(`Tag: ${tag}`);
+            core.info(`Name: ${name}`);
+            core.info(`Body:\n${body.split(/\r?\n/).map((line) => `  ${line}`).join(os.EOL)}`);
+            core.info(`Prerelease: ${prerelease ? 'Yes' : 'No'}`);
+            core.info(`Draft: ${draft ? 'Yes' : 'No'}`);
+            core.info(`Assets:\n${Object.keys(assets).map((asset) => `  ${asset}`).join(os.EOL)}`);
+
+            core.endGroup();
+
+            core.startGroup('Ensure tag');
+
+            const ref = await github.git.getRef({
+              ...context.repo,
+              ref: `tags/${tag}`,
+            })
+            .catch((err) => {
+              if (err.status !== 404)
+                throw err;
+
+              core.info('Tag not found');
+              core.info(`Creating tag '${tag}'`);
+
+              return github.git.createRef({
+                ...context.repo,
+                ref: `refs/tags/${tag}`,
+                sha: context.sha,
+              });
+            });
+
+            if (ref.data.object.sha != context.sha) {
+              core.info('Tag commit hash does not match');
+              core.info(`Updating '${tag}' to ${context.sha}`);
+
+              await github.git.updateRef({
+                ...context.repo,
+                ref: `tags/${tag}`,
+                sha: context.sha,
+                force: true,
+              });
+            }
+            else {
+              core.info(`Tag '${tag}' matches ${context.sha}`);
+            }
+
+            core.endGroup();
+
+            core.startGroup('Create release');
+
+            await github.repos.getReleaseByTag({
+              ...context.repo,
+              tag: tag,
+            })
+            .then((rel) => {
+              core.info('Existing release found');
+              core.info(`Deleting release with ID ${rel.data.id}`);
+
+              return github.repos.deleteRelease({
+                ...context.repo,
+                release_id: rel.data.id,
+              });
+            })
+            .catch((err) => {
+              if (err.status !== 404)
+                throw err;
+
+              return null;
+            });
+
+            core.info(`Creating ${draft ? 'draft ' : ''}${prerelease ? 'prerelease' : 'release'} for tag '${tag}'`);
+
+            const rel = await github.repos.createRelease({
+              ...context.repo,
+              tag_name: tag,
+              name: name,
+              body: body,
+              prerelease: prerelease,
+              draft: draft,
+            });
+
+            core.endGroup();
+
+            core.startGroup('Upload release assets');
+
+            for (let [asset_name, asset_path] of Object.entries(assets)) {
+              core.info(`Uploading '${asset_name}' from '${asset_path}'`);
+
+              await github.repos.uploadReleaseAsset({
+                ...context.repo,
+                release_id: rel.data.id,
+                name: asset_name,
+                data: fs.readFileSync(asset_path),
+              });
+            }
+
+            core.endGroup();
