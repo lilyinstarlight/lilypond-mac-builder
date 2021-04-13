@@ -148,13 +148,12 @@ index 9b4487e..9cefee0 100644
              lineChars += min (char, len (lines[line]))
          return lineChars + 1
 diff --git a/macosx/VERSION b/macosx/VERSION
-index 6cffa4a..f1270b4 100644
+index 6cffa4a..05bb695 100644
 --- a/macosx/VERSION
 +++ b/macosx/VERSION
 @@ -1 +1 @@
 -2.15.22-1
-+2.22.0
-\ No newline at end of file
++2.22.0-1
 diff --git a/macosx/lilycall.py b/macosx/lilycall.py
 index eee483b..d6b3564 100644
 --- a/macosx/lilycall.py
