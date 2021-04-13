@@ -54,7 +54,7 @@ jobs:
             const fs = require('fs');
             const os = require('os');
 
-            const release = context.ref.startsWith('refs/tags/v');
+            const release = context.ref.startsWith('refs/tags/');
 
             const tag = release ? context.ref.replace(/^refs\/tags\//i, '') : 'continuous';
 
