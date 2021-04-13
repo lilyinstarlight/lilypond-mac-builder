@@ -35,7 +35,7 @@ jobs:
       - uses: actions/upload-artifact@v2
         with:
           name: lilypond-macos
-          path: dist/lilypond-*.darwin-64.tar.gz
+          path: dist/lilypond-*.darwin-64.tar.bz2
 
   upload:
     name: Upload Release
@@ -64,7 +64,7 @@ jobs:
             const draft = release;
 
             const assets = {
-              [`lilypond-${tag}.darwin-64.tar.gz`]: './lilypond-macos/' + fs.readdirSync('./lilypond-macos/').filter((name) => name.startsWith('lilypond-') && name.endsWith('.darwin-64.tar.gz'))[0],
+              [`lilypond-${tag}.darwin-64.tar.bz2`]: './lilypond-macos/' + fs.readdirSync('./lilypond-macos/').filter((name) => name.startsWith('lilypond-') && name.endsWith('.darwin-64.tar.bz2'))[0],
             };
 
             core.startGroup('Release information');

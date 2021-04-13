@@ -5,7 +5,7 @@ EXTRA_FILES=${CURDIR}/extra-files
 DISTDIR=${CURDIR}/dist
 
 LILYPAD_BRANCH=master
-LILYPAD_ARCHIVE=https://github.com/gperciva/lilypad/archive/${LILYPAD_BRANCH}.tar.gz
+LILYPAD_ARCHIVE=https://github.com/gperciva/lilypad/archive/${LILYPAD_BRANCH}.tar.bz2
 LILYPAD_PATCH=${PATCHES}/lilypad-python3.patch
 
 MACPORTS_ROOT=/opt/local
@@ -48,7 +48,7 @@ buildclean:
 
 tar: | ${DISTDIR}
 	cd "${BUILDDIR}" &&\
-	tar cvjf "${DISTDIR}/lilypond-${VERSION_AND_BUILD}.darwin-64.tar.gz" LilyPond.app
+	tar cvjf "${DISTDIR}/lilypond-${VERSION_AND_BUILD}.darwin-64.tar.bz2" LilyPond.app
 
 lilypond-all: bundle-dylibs copy-support-files copy-welcome-file
 
