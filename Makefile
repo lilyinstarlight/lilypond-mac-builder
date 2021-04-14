@@ -52,7 +52,7 @@ tar: | ${DISTDIR}
 
 lilypond-all: bundle-dylibs copy-support-files copy-welcome-file
 
-bundle-dylibs: ${MACPORTS_ROOT}/bin/dylibbundler copy-binaries copy-guile-libraries
+bundle-dylibs: copy-binaries copy-guile-libraries ${MACPORTS_ROOT}/bin/dylibbundler
 	for dir in $$(find "${MACPORTS_ROOT}/lib" -type d -maxdepth 1); do \
 	  export DYLD_LIBRARY_PATH="$$dir:$${DYLD_LIBRARY_PATH}";\
 	done &&\
