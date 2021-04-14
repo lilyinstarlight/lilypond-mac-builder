@@ -12,7 +12,8 @@ MACPORTS_ROOT=/opt/local
 
 LILYPOND_GIT=https://git.savannah.gnu.org/git/lilypond.git
 LILYPOND_VERSION=2.22.0
-LILYPOND_BRANCH=release/${LILYPOND_VERSION}-1
+LILYPOND_RELEASE=1
+LILYPOND_BRANCH=release/${LILYPOND_VERSION}-${LILYPOND_RELEASE}
 
 VENV=venv
 
@@ -128,7 +129,7 @@ ${BUILDDIR}/bin/lilypond: ${SOURCEDIR}/lilypond/configure ${SOURCEDIR}/lilypond/
 ${APP_BUNDLE}: | lilypad-venv
 	cd "${SOURCEDIR}/lilypad/macosx" &&\
 	source "${VENV}/bin/activate" &&\
-	echo "${LILYPOND_VERSION}\c" >|VERSION &&\
+	echo "${LILYPOND_VERSION}-${LILYPOND_RELEASE}\c" >|VERSION &&\
 	MACOSX_DEPLOYMENT_TARGET=10.5 python ./setup.py --verbose py2app --icon=lilypond.icns --dist-dir "${BUILDDIR}"
 
 lilypad-venv: ${SOURCEDIR}/lilypad/macosx/${VENV}
