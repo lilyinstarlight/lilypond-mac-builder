@@ -56,10 +56,10 @@ jobs:
 
             const release = context.ref.startsWith('refs/tags/');
 
-            const tag = release ? context.ref.replace(/^refs\/tags\//i, '') : 'continuous';
+            const tag = release ? context.ref.replace(/^refs\/tags\//i, '') : 'unstable';
 
-            const name = release ? `LilyPond macOS 64-bit Build ${tag}` : 'LilyPond macOS 64-bit Build Continuous';
-            const body = release ? '' : 'Continuous builds are freshly baked on every push to the main branch.';
+            const name = release ? `LilyPond ${tag}` : 'LilyPond Unstable';
+            const body = release ? `LilyPond ${tag} (macOS 64-bit)` : 'LilyPond Unstable (macOS 64-bit)\nBuilds are freshly baked on every push to the main branch';
             const prerelease = !release;
             const draft = release;
 
