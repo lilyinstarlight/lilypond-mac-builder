@@ -197,9 +197,21 @@ index eee483b..d6b3564 100644
  
  ################################################################
 diff --git a/macosx/setup.py b/macosx/setup.py
-index 81b69d2..bd3d437 100644
+index 81b69d2..3d25c6c 100644
 --- a/macosx/setup.py
 +++ b/macosx/setup.py
+@@ -13,9 +13,9 @@ plist = dict(
+              NSDocumentClass = "TinyTinyDocument",
+ 	     ),
+ 	],
+-   CFBundleShortVersionString = open ('VERSION').read (),
++   CFBundleShortVersionString = open ('VERSION').read ().strip (),
+    CFBundleVersion = ('Build from '
+-		      + os.popen ('date +"%d-%m-%Y %H:%M"').read ()),
++		      + os.popen ('date +"%d-%m-%Y %H:%M"').read ().strip ()),
+    NSHumanReadableCopyright = "(c) 2011 LilyPond Software Design\nLicensed under the GNU General Public License\nLilyPond comes with NO WARRANTY", 
+    CFBundleDocumentTypes = [
+         dict(
 @@ -40,10 +40,11 @@ setup(
  		'Credits.html',
  		'URLHandle.scriptSuite',
